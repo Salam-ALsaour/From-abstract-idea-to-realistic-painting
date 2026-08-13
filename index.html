@@ -2027,10 +2027,20 @@ function surpriseMe(){
   updateOutput();
 }
 
-// Hook initModeToggle into page init
-document.addEventListener('DOMContentLoaded', function() {
+// Hook initModeToggle & initialize UI on load
+function startApp() {
   initModeToggle();
-});
+  resetSelections();
+  initProjectGrid();
+  renderFields();
+  updateOutput();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 
 </script>
 
