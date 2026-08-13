@@ -348,6 +348,49 @@ footer .gold-dot{color:var(--gold);}
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
 }
 
+
+/* Mode Toggle Buttons (Image / Video) */
+.mode-toggle-wrap {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.mode-btn {
+  padding: 12px 26px;
+  border-radius: 30px;
+  border: 1px solid var(--glass-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-2);
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+.mode-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.mode-btn.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+  color: #191008;
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(234, 168, 16, 0.35);
+  font-weight: 800;
+}
+.mode-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  margin-inline-start: 4px;
+}
+
 </style>
 </head>
 <body>
@@ -468,6 +511,16 @@ footer .gold-dot{color:var(--gold);}
     <div class="section-head reveal">
       <h2>استوديو البرومبت الديناميكي</h2>
       <p>اختر نوع مشروعك، عبّي الحقول، وطلّعلك برومبت احترافي جاهز — بالإنجليزي، جاهز للنسخ مباشرة</p>
+    </div>
+    <div class="mode-toggle-wrap reveal">
+      <button type="button" class="mode-btn active" id="modeImgBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        برومبت الصور <span class="mode-badge">Image Prompt</span>
+      </button>
+      <button type="button" class="mode-btn" id="modeVideoBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        برومبت الفيديو <span class="mode-badge">Video Prompt</span>
+      </button>
     </div>
     <div class="project-scroll" id="projectGrid"></div>
     <p class="scroll-hint mobile-only-hint">← مرر يمين ويسار لعرض كل الأنواع السبعة</p>
@@ -1520,6 +1573,463 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeImageModal();
   });
+});
+
+
+// Dedicated Video Projects System
+const VIDEO_PROJECTS = {
+  cinematic_video: {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5 5-5 5v-10z"/><rect x="2" y="6" width="13" height="12" rx="2"/></svg>',
+    name: 'سينمائي درامي (Cinematic)',
+    negativePrompt: 'تجنّب: تشوه الحركة، تجمّد الشاشة، لقطات غير متناسقة، بكسلة، حركات كاميرا مفاجئة ومشوهة، أخطاء الأيدي والوجه، تدرج لوني ضعيف، تقطيع باللقطات، نصوص غير واضحة',
+    fields: {
+      subject: {
+        label: 'الشخصية وحركة الفعل الرئيسي (Subject & Action)',
+        options: [
+          {ar:'شخصية تسير ببطء وسط عاصفة ثلجية كثيفة', en:'a determined character struggling to walk through a heavy blizzard in a frozen landscape'},
+          {ar:'محارب يحمل سيفاً مضيئاً في مواجهة خطيرة', en:'a heroic warrior wielding a glowing blade standing firm against an approaching enemy'},
+          {ar:'مطاردة حماسية فائقة السرعة بين سيارات مستقبيلة', en:'a high-speed adrenaline chase sequence with sleek futuristic vehicles through tight streets'},
+          {ar:'افتتاح صندوق قديم يبعث طاقة توهج سحرية', en:'a character opening an ancient mysterious chest emitting radiant glowing particles'},
+          {ar:'عالم يستكشف مختبراً مهجوراً مليئاً بالدخان', en:'a focused scientist exploring a dark abandoned laboratory filled with rising atmospheric smoke'}
+        ]
+      },
+      environment: {
+        label: 'البيئة والمحيط السينمائي (Environment & Atmosphere)',
+        options: [
+          {ar:'شارع طوكيو ممطور بأضواء نيون متلألئة', en:'a rainy Neo-Tokyo street with flickering vibrant neon lights reflected on wet asphalt'},
+          {ar:'سلسلة جبال ثلجية وقت غروب الشمس الذهبي', en:'a majestic frozen mountain range bathed in dramatic golden hour sunlight'},
+          {ar:'محطة قطار أنفاق يابانية خالية في منتصف الليل', en:'an empty Japanese subway platform with atmospheric tunnel lights glowing in distance'},
+          {ar:'غابة ضبابية قديمة بها أشجار عملاقة', en:'a dense ancient forest shrouded in thick volumetric fog and sunbeams'},
+          {ar:'أطلال قلعة أثرية على قمة جبل شاهق', en:'gothic ancient castle ruins perched dramatically atop a cliff under a stormy sky'}
+        ]
+      },
+      style: {
+        label: 'النمط البصري والسينمائي (Visual & Film Style)',
+        options: [
+          {ar:'سينمائي ثمانينات مع حبيبات فيلم طبيعية (1980s Cinema Film)', en:'1980s cinema style with natural film grain, warm color grade, retro aesthetic'},
+          {ar:'واقعي سينمائي فائق الدقة (Hyper-realistic Movie Scene)', en:'hyper-realistic cinematic movie scene, 8k resolution, IMAX film depth'},
+          {ar:'خيال علمي مظلم وتباين عالي (Dark Sci-Fi Cinematic)', en:'dark sci-fi cinematic atmosphere, high contrast shadows, anamorphic lens feel'},
+          {ar:'دراما سينمائية دافئة (Warm Dramatic Film)', en:'warm dramatic cinematic tone, soft shadows, golden hour color palette'},
+          {ar:'ألوان نيون سايبربانك (Cyberpunk Neon Aesthetic)', en:'cyberpunk neon color grading, high-tech glowing aesthetic, futuristic film look'}
+        ]
+      },
+      camera_shot: {
+        label: 'تأطير وزاوية الكاميرا (Camera Framing & Shot Type)',
+        options: [
+          {ar:'لقطة متوسطة لتتبع حركة الجذع (Medium Shot)', en:'medium shot framing the subject from waist up'},
+          {ar:'لقطة قريبة لإبراز مشاعر الوجه (Close-up Shot)', en:'close-up shot focusing on emotional facial expressions and subtle details'},
+          {ar:'لقطة واسعة شاملة لإبراز البيئة (Wide Establishing Shot)', en:'wide panoramic establishing shot capturing the full vast environment'},
+          {ar:'لقطة من زاوية منخفضة بطولية (Low-Angle Shot)', en:'low-angle heroic shot looking up at the subject'},
+          {ar:'لقطة من فوق الكتف (Over-the-shoulder Shot)', en:'over-the-shoulder shot creating deep spatial connection'}
+        ]
+      },
+      camera_move: {
+        label: 'حركة الكاميرا السينمائية (Camera Motion)',
+        options: [
+          {ar:'تقريب تدريجي بطيء ونحو الهدف (Slow Push-in Zoom)', en:'slow smooth push-in camera movement towards the subject'},
+          {ar:'لقطة تتبع جانبية مستمرة (Smooth Lateral Tracking Shot)', en:'smooth lateral tracking shot following the movement side-by-side'},
+          {ar:'دوران كامل 360 درجة حول الشخصية (360 Orbiting Shot)', en:'cinematic 360-degree orbiting camera movement around the character'},
+          {ar:'ارتفاع رافعة مائلة للأعلى (Jib Crane Rising Shot)', en:'rising jib crane camera shot revealing the surrounding environment'},
+          {ar:'حركة كاميرا محمولة باليد تفاعلية (Handheld Dynamic Motion)', en:'organic handheld camera movement with subtle natural shake'}
+        ]
+      },
+      motion_lighting: {
+        label: 'سرعة الحركة والإضاءة (Motion Speed & Lighting)',
+        options: [
+          {ar:'حركة بطيئة سينمائية 60fps (Slow Motion)', en:'cinematic slow motion capture, fluid smooth movement'},
+          {ar:'إضاءة كياروسكورو تباين حاد (Chiaroscuro Dramatic Lighting)', en:'chiaroscuro lighting with deep shadows and highlighted focus'},
+          {ar:'حركة طبيعية سريعة التفاعل (Real-time Dynamic Pace)', en:'real-time natural fast action pace'},
+          {ar:'أشعة ضوئية حجمية مسرحية (Volumetric Ray Shafts)', en:'volumetric light rays cutting through atmospheric haze'}
+        ]
+      },
+      aspect: {
+        label: 'نسبة أبعاد الفيديو (Video Aspect Ratio)',
+        options: [
+          {ar:'سينمائي عريض 16:9 (Widescreen 16:9)', en:'16:9 widescreen video format'},
+          {ar:'عمودي ريلز وتيك توك 9:16 (Vertical 9:16 Shorts)', en:'9:16 vertical video format'},
+          {ar:'أبعاد سينما أنامورفيك 21:9 (Ultra Anamorphic 21:9)', en:'21:9 ultra-wide anamorphic cinema aspect ratio'},
+          {ar:'مربع 1:1 (Square 1:1)', en:'1:1 square video aspect ratio'}
+        ]
+      }
+    }
+  },
+  commercial_video: {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+    name: 'إعلانات ومنتجات (Commercial Video)',
+    negativePrompt:'تجنّb: منتج مشوه، إضاءة سيئة، خلفية مزدحمة، حركة اهتزازية غير مريحة، نصوص مشوهة، ألوان غير متناسقة، انعكاسات مزعجة',
+    fields: {
+      subject: {
+        label: 'المنتج وحركة العرض (Product & Presentation)',
+        options: [
+          {ar:'عرض فخم لساعة يد فاخرة تدور بسلاسة', en:'a luxury wristwatch rotating slowly on a dark reflective pedestal'},
+          {ar:'سكب مشروب غازي بارد مع قطرات ندى وتصاعد فقاعات', en:'pouring a cold refreshing beverage into a crystal glass with macro condensation drops'},
+          {ar:'حذاء رياضي أنيق يدور في الهواء بخلفية نيون', en:'a stylish modern sneaker floating and spinning gracefully with glowing ambient lights'},
+          {ar:'زجاجة عطر راقية تحيط بها قطرات ماء معلقة', en:'an elegant perfume bottle surrounded by floating water droplets in slow motion'}
+        ]
+      },
+      environment: {
+        label: 'خلفية الاستوديو والبيئة (Studio Background)',
+        options: [
+          {ar:'منصة استوديو سوداء مع انعكاس مرآتي', en:'sleek black studio pedestal with perfect mirror reflection'},
+          {ar:'خلفية هندسية رخامية راقية', en:'luxury marble surface with subtle warm bokeh backlighting'},
+          {ar:'خلفية طبيعية مشمسة مع أوراق شجر خفيفة', en:'bright natural outdoor lighting with soft sun flare and green foliage'},
+          {ar:'استوديو نيون عصري ذو ألوان متناسقة', en:'modern studio background with gradient color lighting'}
+        ]
+      },
+      style: {
+        label: 'النمط البصري والتجاري (Commercial Style)',
+        options: [
+          {ar:'إعلان تجاري فاخر فائق النقاء (High-end Luxury Commercial)', en:'high-end luxury commercial style, crisp focus, pristine commercial aesthetic'},
+          {ar:'عرض منتج عصري بنمط مينيمال (Minimalist Product Showcase)', en:'clean minimalist product showcase, soft shadows, studio precision'},
+          {ar:'نمط سينمائي حيوي (Dynamic Commercial Punch)', en:'vibrant commercial color grading with punchy contrast'}
+        ]
+      },
+      camera_shot: {
+        label: 'تأطير الكاميرا (Camera Framing)',
+        options: [
+          {ar:'لقطة ماكرو مكبرة بدقة التفاصيل (Macro Macro Close-up)', en:'macro extreme close-up highlighting fine craftsmanship textures'},
+          {ar:'لقطة متوسطة متزنة للمنتج (Centered Medium Product Shot)', en:'perfectly centered medium product shot'},
+          {ar:'لقطة دائرية ثلاثية الأبعاد (360 Product Spin Shot)', en:'360 degree revolving product view'}
+        ]
+      },
+      camera_move: {
+        label: 'حركة الكاميرا (Camera Motion)',
+        options: [
+          {ar:'دوران سلس بطيء حول المنتج (Slow Smooth Product Orbit)', en:'slow smooth camera orbit around the product'},
+          {ar:'انزلاق عمودي من الأسفل للأعلى (Vertical Rise Tilt Shot)', en:'smooth vertical rising camera tilt showcasing height'},
+          {ar:'اقتراب ماكرو تدريجي (Macro Zoom-in Reveal)', en:'gradual macro zoom-in revealing intricate details'}
+        ]
+      },
+      motion_lighting: {
+        label: 'الإضاءة والسرعة (Lighting & Motion)',
+        options: [
+          {ar:'إضاءة استوديو ناعمة محيطية (Soft Studio Key Lighting)', en:'soft studio key lighting with gentle highlights'},
+          {ar:'حركة بطيئة فائقة 120fps (Super Slow Motion)', en:'super slow motion 120fps capturing fluid drops and splashes'},
+          {ar:'إضاءة حافة ذهبية متألقة (Rim Lighting & Golden Flare)', en:'dramatic rim lighting highlighting product contours'}
+        ]
+      },
+      aspect: {
+        label: 'نسبة أبعاد الفيديو (Aspect Ratio)',
+        options: [
+          {ar:'عمودي 9:16 (سناب وإنستغرام)', en:'9:16 vertical commercial format'},
+          {ar:'سينمائي 16:9 (يوتيوب وتلفزيون)', en:'16:9 widescreen tv commercial format'},
+          {ar:'مربع 1:1 (منشورات وسوشيال)', en:'1:1 square social format'}
+        ]
+      }
+    }
+  },
+  anime_action_video: {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>',
+    name: 'أنمي وحركة (Anime & Action)',
+    negativePrompt:'تجنّب: رسم مشوه، حركة غير متناسقة، هبوط معدل الإطارات، أخطاء وشم أو ملامح، خلفية ثابتة مملة، ألوان باهتة',
+    fields: {
+      subject: {
+        label: 'الشخصية وحركة الأكشن (Anime Action)',
+        options: [
+          {ar:'بطل أنمي يقفز في الهواء ويسحب سيف الطاقة', en:'an anime hero leaping into the air drawing a glowing energy katana'},
+          {ar:'قتال حماسي سريع بين شخصيتين في ساحة المعركة', en:'intense anime battle sequence between two rivals exchanging swift strikes'},
+          {ar:'شخصية أنمي تطلق هجوماً طاقياً مع خطوط سرعة', en:'anime character unleashing a powerful energy blast with speed lines'}
+        ]
+      },
+      environment: {
+        label: 'البيئة والساحة (Anime Scene)',
+        options: [
+          {ar:'سماء أنمي عند سحر الغروب مع غيوم ملوّنة', en:'vibrant anime sunset sky with stylized fluffy clouds'},
+          {ar:'سطح مبنى مستقبلي في طوكيو تحت المطر', en:'rooftop of a futuristic Tokyo building during a thunderstorm'},
+          {ar:'ساحة قتال مدمرة مع شظايا عائمة', en:'shattered battle ground with floating debris and energy embers'}
+        ]
+      },
+      style: {
+        label: 'أسلوب الأنمي (Anime Style)',
+        options: [
+          {ar:'أنمي ياباني حديث بإنتاج عالي (Modern High-budget Anime)', en:'modern high-budget Japanese anime animation style, ufotable quality'},
+          {ar:'أنمي كلاسيكي التسعينات (Classic 90s Cyber Anime)', en:'classic 1990s retro anime aesthetic, crisp cel shading'},
+          {ar:'أنمي سينمائي حركي (Dynamic Action Anime Aesthetic)', en:'dynamic sakuga anime action aesthetic with expressive motion'}
+        ]
+      },
+      camera_shot: {
+        label: 'التأطير (Framing)',
+        options: [
+          {ar:'لقطة زاوية مائلة ديناميكية (Dutch Angle Action Shot)', en:'dynamic dutch angle action framing'},
+          {ar:'لقطة قريبة متأثرة بالحركة (Close-up Impact Shot)', en:'close-up impact frame highlighting intense eyes'},
+          {ar:'لقطة تتبع تتبع البطل (Tracking Hero Shot)', en:'fast tracking shot keeping up with character movement'}
+        ]
+      },
+      camera_move: {
+        label: 'حركة الكاميرا (Camera Motion)',
+        options: [
+          {ar:'دوران سريع ومفاجئ حول الحركة (Rapid Whip Pan Orbit)', en:'rapid whip pan camera movement wrapping around the action'},
+          {ar:'اندفاع كاميرا سريع للأمام (Fast Forward Zoom)', en:'fast aggressive camera zoom into the action center'}
+        ]
+      },
+      motion_lighting: {
+        label: 'السرعة والإضاءة (Motion & Glow)',
+        options: [
+          {ar:'خطوط سرعة ديناميكية مع شرارات طاقة (Speed Lines & Energy Sparks)', en:'vibrant speed lines with electric energy sparks'},
+          {ar:'تأثير إبطاء زمن الأكشن (Impact Slow Motion Freeze)', en:'dramatic impact slow motion pause'}
+        ]
+      },
+      aspect: {
+        label: 'نسبة الأبعاد (Aspect Ratio)',
+        options: [
+          {ar:'سينمائي 16:9', en:'16:9 widescreen anime format'},
+          {ar:'عمودي 9:16', en:'9:16 vertical anime reel format'}
+        ]
+      }
+    }
+  },
+  documentary_video: {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>',
+    name: 'وثائقي وطبيعة (Nature Documentary)',
+    negativePrompt:'تجنّب: حركة غير واقعية للحيوانات، تشوه الأطراف، إضاءة اصطناعية زرقاء، بكسلة، اهتزاز مزعج، بيئة غير طبيعية',
+    fields: {
+      subject: {
+        label: 'الحيوان أو العنصر الوثائقي (Documentary Subject)',
+        options: [
+          {ar:'نمر ناصع يتربص بين الأعشاب الذهبية', en:'a majestic tiger pacing stealthily through tall golden savannah grass'},
+          {ar:'ثعلب قطبي يقفز في الثلج الناعم', en:'a fluffy white arctic fox leaping gracefully into soft deep snow'},
+          {ar:'سرب أسماك ملوّنة يسبح حول شعب مرجانية', en:'a vibrant school of tropical fish weaving through colorful coral reefs'},
+          {ar:'نسر حلق في السماءفوق وادي ضخم', en:'a soaring eagle gliding smoothly high above a massive canyon'}
+        ]
+      },
+      environment: {
+        label: 'البيئة الطبيعية (Nature Setting)',
+        options: [
+          {ar:'غابة استوائية ممطرة مع ضوء نهار خافت', en:'lush tropical rainforest with mist and filtered sunbeams'},
+          {ar:'صحراء واسعة ذات كثبان رملية متموجة', en:'vast desert landscape with sweeping golden sand dunes'},
+          {ar:'محيط أزرق صافي بعمق مائي متدرج', en:'crystal clear ocean depths with caustics light patterns on seafloor'}
+        ]
+      },
+      style: {
+        label: 'النمط الوثائقي (Docu-Style)',
+        options: [
+          {ar:'وثائقي طبيعي HD واقعي (BBC Earth Documentary Style)', en:'national geographic BBC earth documentary style, ultra realistic 8k'},
+          {ar:'وثائقي سينمائي سينمائي دافئ (Cinematic Wildlife Film)', en:'cinematic wildlife film aesthetic, natural color grading'}
+        ]
+      },
+      camera_shot: {
+        label: 'تأطير الكاميرا (Camera Framing)',
+        options: [
+          {ar:'لقطة مقربة فائقة للتفاصيل (Extreme Telephoto Close-up)', en:'extreme telephoto lens close-up capturing micro details'},
+          {ar:'لقطة جوية واسعة بالدرون (Aerial Drone View)', en:'wide sweeping aerial drone camera perspective'}
+        ]
+      },
+      camera_move: {
+        label: 'حركة الكاميرا (Camera Motion)',
+        options: [
+          {ar:'تتبع هادئ ومستمر من بعيد (Smooth Distant Tracking)', en:'smooth fluid camera tracking maintaining steady distance'},
+          {ar:'تحليق جوي انسيابي خفيف (Slow Aerial Glide)', en:'slow cinematic aerial glide forward'}
+        ]
+      },
+      motion_lighting: {
+        label: 'الإضاءة والسرعة (Lighting & Motion)',
+        options: [
+          {ar:'إضاءة طبيعية شمسية دافئة (Natural Golden Sunlight)', en:'authentic natural golden sunlight with soft ambient shadows'},
+          {ar:'حركة طبيعية هادئة 60fps (Natural Fluid Pace)', en:'fluid natural motion capture 60fps'}
+        ]
+      },
+      aspect: {
+        label: 'نسبة الأبعاد (Aspect Ratio)',
+        options: [
+          {ar:'عريض سينمائي 16:9', en:'16:9 widescreen documentary format'},
+          {ar:'عمودي 9:16', en:'9:16 vertical docu format'}
+        ]
+      }
+    }
+  }
+};
+
+let currentMode = 'image'; // 'image' or 'video'
+
+function getActiveProjects() {
+  return currentMode === 'video' ? VIDEO_PROJECTS : PROJECTS;
+}
+
+function initModeToggle() {
+  const imgBtn = document.getElementById('modeImgBtn');
+  const vidBtn = document.getElementById('modeVideoBtn');
+  if (!imgBtn || !vidBtn) return;
+
+  imgBtn.addEventListener('click', function() {
+    if (currentMode === 'image') return;
+    currentMode = 'image';
+    imgBtn.classList.add('active');
+    vidBtn.classList.remove('active');
+    currentProject = 'product';
+    resetSelections();
+    initProjectGrid();
+    renderFields();
+    updateOutput();
+  });
+
+  vidBtn.addEventListener('click', function() {
+    if (currentMode === 'video') return;
+    currentMode = 'video';
+    vidBtn.classList.add('active');
+    imgBtn.classList.remove('active');
+    currentProject = 'cinematic_video';
+    resetSelections();
+    initProjectGrid();
+    renderFields();
+    updateOutput();
+  });
+}
+
+// Override initProjectGrid to support dynamic active mode
+function initProjectGrid(){
+  const grid = document.getElementById('projectGrid');
+  const activeProjs = getActiveProjects();
+  if(!activeProjs[currentProject]) {
+    currentProject = Object.keys(activeProjs)[0];
+  }
+  grid.innerHTML = Object.keys(activeProjs).map(function(key){
+    const p = activeProjs[key];
+    return '<button type="button" class="project-btn'+(key===currentProject?' active':'')+'" data-key="'+key+'">'+p.icon+'<span>'+p.name+'</span></button>';
+  }).join('');
+  grid.querySelectorAll('.project-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      currentProject = btn.dataset.key;
+      grid.querySelectorAll('.project-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      resetSelections();
+      renderFields();
+      updateOutput();
+    });
+  });
+}
+
+// Override renderFields & getFieldValue & updateOutput to handle video dynamic keys
+function resetSelections(){
+  selections = {};
+  freeStates = {};
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  if(!proj) return;
+  
+  if (currentMode === 'video') {
+    Object.keys(proj.fields).forEach(function(fk){
+      selections[fk] = {idx:0, text:''};
+      freeStates[fk] = false;
+    });
+  } else {
+    fieldOrderUI.forEach(function(fk){
+      selections[fk] = {idx:0, text:''};
+      freeStates[fk] = false;
+    });
+  }
+}
+
+function renderFields(){
+  const col = document.getElementById('fieldsCol');
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  if(!proj) return;
+  let html = '';
+
+  if (currentMode === 'video') {
+    let num = 1;
+    Object.keys(proj.fields).forEach(function(fk){
+      const f = proj.fields[fk];
+      const sel = selections[fk] || {idx:0, text:''};
+      const isFree = freeStates[fk] || false;
+      const optsHtml = f.options.map(function(opt,i){
+        return '<option value="'+i+'"'+(sel.idx===i?' selected':'')+'>'+opt.ar+'</option>';
+      }).join('');
+      html += '<div class="field-block glass'+(justSurprised?' just-surprised':'')+'">'
+        + '<div class="field-head">'
+        + '<span class="field-label"><span class="num">'+(num++)+'</span>'+f.label+'</span>'
+        + '<span class="free-toggle'+(isFree?' active':'')+'" data-field="'+fk+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>اكتب بنفسك</span>'
+        + '</div>'
+        + '<select class="field-select'+(isFree?' field-hidden':'')+'" data-field="'+fk+'">'+optsHtml+'</select>'
+        + '<input type="text" class="free-input'+(isFree?' active':'')+'" data-field="'+fk+'" placeholder="اكتب وصفك الخاص هنا..." value="'+(sel.text||'').replace(/"/g,'&quot;')+'">'
+        + '</div>';
+    });
+  } else {
+    fieldOrderUI.forEach(function(fk){
+      if(fk === 'style'){ html += renderStyleField(proj); }
+      else { html += renderSelectField(fk, proj.fields[fk]); }
+    });
+  }
+
+  col.innerHTML = html;
+  attachFieldListeners(col);
+  justSurprised = false;
+}
+
+function getFieldValue(fk){
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  const sel = selections[fk] || {idx:0, text:''};
+  if(freeStates[fk]){
+    return (sel.text||'').trim();
+  }
+  if(currentMode === 'image' && fk === 'style'){
+    const sid = proj.styleIds[sel.idx];
+    const st = STYLES[sid];
+    return st ? ('نمط ' + st.ar) : '';
+  }
+  if(!proj.fields[fk]) return '';
+  const opt = proj.fields[fk].options[sel.idx];
+  return opt ? (opt.en || opt.ar) : '';
+}
+
+function updateOutput(){
+  const wrap = document.getElementById('outputChips');
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  if(!proj) return;
+  const parts = [];
+
+  if (currentMode === 'video') {
+    Object.keys(proj.fields).forEach(function(fk){
+      const val = getFieldValue(fk);
+      if(val){ parts.push({type:fk, val:val}); }
+    });
+  } else {
+    outputOrderKeys.forEach(function(fk){
+      const val = getFieldValue(fk);
+      if(val){ parts.push({type:fk, val:val}); }
+    });
+  }
+
+  if(parts.length === 0){
+    wrap.innerHTML = '<span style="color:var(--text-3);font-size:.85rem;">اختر خيارات من الحقول عشان يبدأ يتكوّن البرومبت هنا...</span>';
+  } else {
+    wrap.innerHTML = parts.map(function(p){
+      return '<span class="out-chip" data-t="'+p.type+'">'+escapeHtml(p.val)+'</span>';
+    }).join('');
+  }
+  window.currentPromptText = parts.map(function(p){ return p.val; }).join(', ') + (parts.length ? '.' : '');
+  const negText = proj.negativePrompt || '';
+  document.getElementById('negativeOutput').textContent = negText ? (negText) : '';
+}
+
+function surpriseMe(){
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  if(!proj) return;
+
+  if (currentMode === 'video') {
+    Object.keys(proj.fields).forEach(function(fk){
+      freeStates[fk] = false;
+      const max = proj.fields[fk].options.length;
+      selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
+    });
+  } else {
+    fieldOrderUI.forEach(function(fk){
+      freeStates[fk] = false;
+      const max = (fk === 'style') ? proj.styleIds.length : proj.fields[fk].options.length;
+      selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
+    });
+  }
+  justSurprised = true;
+  renderFields();
+  updateOutput();
+}
+
+// Hook initModeToggle into page init
+document.addEventListener('DOMContentLoaded', function() {
+  initModeToggle();
 });
 
 </script>
