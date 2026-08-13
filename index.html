@@ -641,47 +641,48 @@ const PROJECTS = {
       {ar:'عريض 3:1 (شعار أفقي)',en:'3:1 wide horizontal logo lockup for headers'}
     ]}
   }},
-  comic:{icon:ICONS.comic,name:'القصص المصورة والكوميكس',negativePrompt:'جودة رديئة، ضبابي، بكسلة، تشوهات، علامة مائية، تأطير سيئ، ألوان زائدة التشبع، عناصر مكررة، حواف خشنة، خطوط غير متسقة السماكة، اختلاف ملامح الشخصية بين اللوحات، منظور خاطئ، ألوان موحلة أو مختلطة، تعابير وجه غير واضحة',styleIds:['cinematic','anime','comicink','claymation','cyberpunk','steampunk','pencilsketch','watercolor'],fields:{
-    subject:{label:'العنصر الأساسي',options:[
-      {ar:'بطل بملامح معبرة',en:'a hero with expressive facial features'},
-      {ar:'مشهد حواري بين شخصيتين',en:'a dialogue scene between two characters'},
-      {ar:'شرير القصة',en:"the story's villain"},
-      {ar:'مخلوق خيالي',en:'a fantastical creature'},
-      {ar:'مطاردة أو هروب',en:'a chase or escape sequence'},
-      {ar:'اجتماع فريق الأبطال',en:'the hero team gathering together'},
-      {ar:'لحظة اكتشاف أو مفاجأة',en:'a moment of shocking discovery'},
-      {ar:'حيوان أليف بقدرات خاصة',en:'a sidekick animal with special powers'}
+  comic:{icon:ICONS.comic,name:'القصص المصورة والكوميكس',negativePrompt:'جودة رديئة، ضبابي، بكسلة، تشوهات، علامة مائية، تأطير سيئ، ألوان زائدة التشبع، عناصر مكررة، حواف خشنة، خطوط غير متسقة السماكة، اختلاف ملامح الشخصية بين اللوحات، منظور خاطئ، ألوان موحلة أو مختلطة، تعابير وجه غير واضحة',styleIds:['anime','comicink','cinematic','pencilsketch','cyberpunk','steampunk','watercolor','claymation'],fields:{
+    subject:{label:'العنصر الأساسي والشخصيات',options:[
+      {ar:'بطل مانجا حاد الملامح في مواجهة حاسمة',en:'a sharp-featured manga hero in a decisive confrontation'},
+      {ar:'مواجهة ملحمية بين بطل وخصم عملاق',en:'an epic confrontation between a hero and a giant boss'},
+      {ar:'مشهد حوار سينمائي وتعبير وجه قريب مع فقاعات كلام',en:'a dramatic dialogue close-up with speech bubbles'},
+      {ar:'بطل يقف على سطح بناية مرتفعة مطلة على المدينة',en:'a hero standing on a tall rooftop overlooking the city'},
+      {ar:'مطاردة حماسية وحركة تتابعية سريعة',en:'an intense action chase sequence with motion lines'},
+      {ar:'فريق الأبطال في مواجهة الخطر',en:'the hero team standing united against impending danger'},
+      {ar:'لحظة اكتشاف مفاجئة وتغير في أصل الأحداث',en:'a dramatic plot-twist discovery moment'},
+      {ar:'بطل يتأمل الأفق في لحظة قرار غامضة',en:'a hero contemplating the horizon in a dramatic cinematic moment'}
     ]},
-    environment:{label:'البيئة وتكوين الكاميرا',options:[
-      {ar:'مدينة مستقبلية',en:'a futuristic cityscape'},
-      {ar:'غابة غامضة',en:'a mysterious dense forest'},
-      {ar:'داخل غرفة سرية',en:'inside a secret hidden room'},
-      {ar:'معركة في الفضاء',en:'an intense space battle scene'},
-      {ar:'مدرسة أو حرم جامعي',en:'a school or campus setting'},
-      {ar:'سوق شعبي مزدحم',en:'a busy traditional marketplace'},
-      {ar:'سطح بناية مرتفع',en:'the rooftop of a tall building'}
+    dynamic:{label:'عدد المشاهد وتقسيم اللوحات (Panels Count)',options:[
+      {ar:'4 مشاهد تتابعية (شريط مانجا/كوميكس أفقي كامل - 4 Panels)',en:'a 4-panel horizontal sequential manga comic strip layout'},
+      {ar:'3 مشاهد متسلسلة (تخطيط ثلاثي تتابعي - 3 Panels)',en:'a 3-panel sequential comic strip layout'},
+      {ar:'مشهدان متقابلان (لوحتين مواجهة - 2 Panels)',en:'a 2-panel split facing comic layout'},
+      {ar:'تخطيط شبكي متعدد اللوحات (Multi-Panel Manga Page)',en:'a multi-panel structured manga page layout'},
+      {ar:'صفحة مانجا كاملة مع تقسيم إطارات متنوع',en:'a complete full manga page with dynamic panel frames'},
+      {ar:'لوحة سينمائية واحدة واسعة (Single Wide Panel)',en:'a single widescreen cinematic splash panel'},
+      {ar:'لوحة قريبة مركزية معبرة (Single Close-up Panel)',en:'a single dramatic close-up focal panel'}
     ]},
-    text:{label:'النص والطباعة',options:[
-      {ar:'فقاعة حوار فارغة',en:'an empty speech bubble'},
-      {ar:'نص صوت تأثيري',en:'a bold sound-effect text like "BOOM"'},
-      {ar:'بدون نص',en:'no text'},
-      {ar:'فقاعة تفكير',en:'an empty thought bubble'},
-      {ar:'عنوان الفصل بخط كوميكس',en:'a chapter title in comic-book lettering'}
+    environment:{label:'البيئة وتكوين الخلفية',options:[
+      {ar:'مدينة أفقية مستقبلية وقت الغروب',en:'a futuristic cityscape skyline at vibrant sunset'},
+      {ar:'ساحة معركة مدمرة مع شظايا ودخان',en:'a destroyed battlefield with smoke and floating debris'},
+      {ar:'عالم خيالي بضوء وطاقة سحرية متفجرة',en:'a fantasy realm with glowing aura and magical energy bursts'},
+      {ar:'مدينة ليلية مظلمة بنيون وأضواء متألقة',en:'a dark cyberpunk city at night with neon reflections'},
+      {ar:'غابة غامضة وضبابية كثيفة',en:'a dark mysterious foggy forest setting'},
+      {ar:'داخل غرفة سرية ومقر قيادة',en:'inside a high-tech secret command base'},
+      {ar:'سطح بناية مرتفعة مطلة على الأفق',en:'a high building rooftop overlooking a sprawling metropolis'}
     ]},
-    dynamic:{label:'زوايا السرد التتابعي',options:[
-      {ar:'لقطة حركة',en:'a dynamic action shot with motion lines'},
-      {ar:'لقطة تأسيسية واسعة',en:'a wide establishing shot'},
-      {ar:'لقطة قريبة عاطفية',en:'an emotional close-up shot'},
-      {ar:'زاوية منخفضة بطولية',en:'a heroic low-angle shot'},
-      {ar:'تقسيم لوحات متعدد',en:'a multi-panel comic layout'},
-      {ar:'لقطة علوية شاملة',en:"a bird's-eye overview shot"},
-      {ar:'لقطة عبر الكتف',en:'an over-the-shoulder framing shot'},
-      {ar:'تجميد اللحظة الحاسمة',en:'a full-page dramatic splash panel'}
+    text:{label:'فقاعات الحوار والنصوص',options:[
+      {ar:'فقاعات حوار مانجا بيضاء مع نصوص حماسية',en:'white manga speech bubbles with expressive Arabic dialogue text'},
+      {ar:'فقاعات حوار فارغة جاهزة للكتابة',en:'empty white manga speech bubbles'},
+      {ar:'فقاعات تفكير داخلية ومشاعر شخصية',en:'thought bubbles capturing inner monologue'},
+      {ar:'نصوص تأثيرات صوتية حماسية (SFX Sound Effects)',en:'bold comic sound-effect SFX text captions'},
+      {ar:'بدون نص - تركيز بصري وسرد صامت',en:'no text, pure visual storytelling'},
+      {ar:'عنوان الفصل والقصة بخط مانجا عريض',en:'a dramatic manga chapter title lockup'}
     ]},
     aspect:{label:'نسبة الأبعاد',options:[
-      {ar:'عمودي 2:3 (لوحة كلاسيكية)',en:'2:3 portrait, classic comic panel ratio'},
-      {ar:'عريض 16:9 (لوحة سينمائية)',en:'16:9 widescreen panel'},
-      {ar:'مربع 1:1 (بوست سوشال)',en:'1:1 square for social panels'}
+      {ar:'عريض 16:9 (شريط مانجا/كوميكس أفقي 4 مشاهد)',en:'16:9 widescreen, ideal for horizontal 4-panel manga strips'},
+      {ar:'عمودي 9:16 (صفحة مانجا طولية متتابعة)',en:'9:16 vertical portrait, ideal for mobile webtoon manga pages'},
+      {ar:'عمودي كلاسيكي 2:3 (صفحة كوميكس قياسية)',en:'2:3 portrait, classic comic book page ratio'},
+      {ar:'مربع 1:1 (بوست سوشال ميديا تتابعي)',en:'1:1 square for social media panels'}
     ]}
   }},
   poster:{icon:ICONS.poster,name:'البوسترات والإينفوجرافيك',negativePrompt:'جودة رديئة، ضبابي، بكسلة، تشوهات، علامة مائية، تأطير سيئ، ألوان زائدة التشبع، عناصر مكررة، حواف خشنة، نص فيه أخطاء إملائية أو مشوّه، تباين ضعيف بين النص والخلفية، نص مقطوع من الحواف، ازدحام بصري زائد',styleIds:['cinematic','flatvector','watercolor','oilpainting','anime','retrovintage','cyberpunk','steampunk','minimalswiss','fashioneditorial','surreal'],fields:{
