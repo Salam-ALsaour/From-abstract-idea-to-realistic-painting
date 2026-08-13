@@ -1178,410 +1178,14 @@ let selections = {};
 let freeStates = {};
 let justSurprised = false;
 
-function resetSelections(){
-  selections = {};
-  freeStates = {};
-  fieldOrderUI.forEach(function(fk){
-    selections[fk] = {idx:0, text:''};
-    freeStates[fk] = false;
-  });
-}
 
-function initProjectGrid(){
-  const grid = document.getElementById('projectGrid');
-  grid.innerHTML = Object.keys(PROJECTS).map(function(key){
-    const p = PROJECTS[key];
-    return '<button type="button" class="project-btn'+(key===currentProject?' active':'')+'" data-key="'+key+'">'+p.icon+'<span>'+p.name+'</span></button>';
-  }).join('');
-  grid.querySelectorAll('.project-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      currentProject = btn.dataset.key;
-      grid.querySelectorAll('.project-btn').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      resetSelections();
-      renderFields();
-      updateOutput();
-    });
-  });
-}
+let currentMode = 'image'; // 'image' or 'video'
 
-function renderSelectField(fk, f){
-  const sel = selections[fk];
-  const isFree = freeStates[fk];
-  const isDynamic = (fk === 'dynamic');
-  const optsHtml = f.options.map(function(opt,i){
-    return '<option value="'+i+'"'+(sel.idx===i?' selected':'')+'>'+opt.ar+'</option>';
-  }).join('');
-  return '<div class="field-block glass'+(isDynamic?' dynamic-field':'')+(justSurprised?' just-surprised':'')+'">'
-    + '<div class="field-head">'
-    + '<span class="field-label"><span class="num">'+fieldNumMap[fk]+'</span>'+f.label+'</span>'
-    + '<span class="free-toggle'+(isFree?' active':'')+'" data-field="'+fk+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>اكتب بنفسك</span>'
-    + '</div>'
-    + '<select class="field-select'+(isFree?' field-hidden':'')+'" data-field="'+fk+'">'+optsHtml+'</select>'
-    + '<input type="text" class="free-input'+(isFree?' active':'')+'" data-field="'+fk+'" placeholder="اكتب وصفك الخاص هنا..." value="'+(sel.text||'').replace(/"/g,'&quot;')+'">'
-    + '</div>';
-}
-
-function renderStyleField(proj){
-  const fk = 'style';
-  const isFree = freeStates[fk];
-  const sel = selections[fk];
-  const ids = proj.styleIds;
-  const imgs = proj.styleImages || {};
-  const cardsHtml = ids.map(function(sid, i){
-    const st = STYLES[sid];
-    const isSel = (!isFree && sel.idx === i);
-    const swatchHtml = imgs[sid]
-      ? '<div class="style-swatch" style="background-image:url(&quot;'+imgs[sid]+'&quot;);background-size:cover;background-position:center;"></div>'
-      : '<div class="style-swatch swatch-'+st.swatch+'"></div>';
-    return '<div class="style-card'+(isSel?' selected':'')+'" data-idx="'+i+'">'
-      + swatchHtml
-      + '<span class="style-name">'+st.ar+'</span>'
-      + '</div>';
-  }).join('');
-  return '<div class="field-block glass'+(justSurprised?' just-surprised':'')+'">'
-    + '<div class="field-head">'
-    + '<span class="field-label"><span class="num">'+fieldNumMap[fk]+'</span>'+styleFieldLabel+'</span>'
-    + '<span class="free-toggle'+(isFree?' active':'')+'" data-field="'+fk+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>اكتب بنفسك</span>'
-    + '</div>'
-    + '<div class="style-scroll'+(isFree?' field-hidden':'')+'" id="styleScroll">'+cardsHtml+'</div>'
-    + '<input type="text" class="free-input'+(isFree?' active':'')+'" data-field="'+fk+'" placeholder="اكتب النمط الفني اللي تبيه..." value="'+(sel.text||'').replace(/"/g,'&quot;')+'">'
-    + '</div>';
-}
-
-function renderFields(){
-  const col = document.getElementById('fieldsCol');
-  const proj = PROJECTS[currentProject];
-  let html = '';
-  fieldOrderUI.forEach(function(fk){
-    if(fk === 'style'){ html += renderStyleField(proj); }
-    else { html += renderSelectField(fk, proj.fields[fk]); }
-  });
-  col.innerHTML = html;
-  attachFieldListeners(col);
-  justSurprised = false;
-}
-
-function surpriseMe(){
-  const proj = PROJECTS[currentProject];
-  fieldOrderUI.forEach(function(fk){
-    freeStates[fk] = false;
-    const max = (fk === 'style') ? proj.styleIds.length : proj.fields[fk].options.length;
-    selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
-  });
-  justSurprised = true;
-  renderFields();
-  updateOutput();
-}
-
-document.getElementById('surpriseBtn').addEventListener('click', function(){
-  const btn = this;
-  btn.classList.add('spinning');
-  setTimeout(function(){ btn.classList.remove('spinning'); }, 500);
-  surpriseMe();
-});
-
-function attachFieldListeners(col){
-  col.querySelectorAll('.field-select').forEach(function(sel){
-    sel.addEventListener('change', function(){
-      const fk = sel.dataset.field;
-      selections[fk] = {idx:+sel.value, text:selections[fk].text};
-      updateOutput();
-    });
-  });
-  col.querySelectorAll('.style-card').forEach(function(card){
-    card.addEventListener('click', function(){
-      const idx = +card.dataset.idx;
-      const proj = PROJECTS[currentProject];
-      const isAlreadySelected = (!freeStates.style && selections.style.idx === idx);
-      
-      if (isAlreadySelected) {
-        const sid = proj.styleIds[idx];
-        const imgUrl = (proj.styleImages && proj.styleImages[sid]);
-        const st = STYLES[sid];
-        if (imgUrl) {
-          const styleTitle = (st ? st.ar : 'النمط الفني') + ' - ' + proj.name;
-          openImageModal(imgUrl, styleTitle);
-          return;
-        }
-      }
-      
-      selections.style = {idx:idx, text:selections.style.text};
-      freeStates.style = false;
-      renderFields();
-      updateOutput();
-    });
-  });
-  col.querySelectorAll('.free-toggle').forEach(function(tg){
-    tg.addEventListener('click', function(){
-      const fk = tg.dataset.field;
-      freeStates[fk] = !freeStates[fk];
-      renderFields();
-      updateOutput();
-      if(freeStates[fk]){
-        const inp = col.querySelector('.free-input[data-field="'+fk+'"]');
-        if(inp){ inp.focus(); }
-      }
-    });
-  });
-  col.querySelectorAll('.free-input').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      const fk = inp.dataset.field;
-      selections[fk].text = inp.value;
-      updateOutput();
-    });
-  });
-}
-
-function escapeHtml(str){
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function getFieldValue(fk){
-  const proj = PROJECTS[currentProject];
-  const sel = selections[fk];
-  if(freeStates[fk]){
-    return (sel.text||'').trim();
-  }
-  if(fk === 'style'){
-    const sid = proj.styleIds[sel.idx];
-    const st = STYLES[sid];
-    return st ? ('نمط ' + st.ar) : '';
-  }
-  const opt = proj.fields[fk].options[sel.idx];
-  return opt ? opt.ar : '';
-}
-
-function updateOutput(){
-  const wrap = document.getElementById('outputChips');
-  const parts = [];
-  outputOrderKeys.forEach(function(fk){
-    const val = getFieldValue(fk);
-    if(val){ parts.push({type:fk, val:val}); }
-  });
-  if(parts.length === 0){
-    wrap.innerHTML = '<span style="color:var(--text-3);font-size:.85rem;">اختر خيارات من الحقول عشان يبدأ يتكوّن البرومبت هنا...</span>';
-  } else {
-    wrap.innerHTML = parts.map(function(p){
-      return '<span class="out-chip" data-t="'+p.type+'">'+escapeHtml(p.val)+'</span>';
-    }).join('');
-  }
-  window.currentPromptText = parts.map(function(p){ return p.val; }).join('، ') + (parts.length ? '.' : '');
-  const negText = PROJECTS[currentProject].negativePrompt || '';
-  document.getElementById('negativeOutput').textContent = negText ? ('تجنّب: ' + negText) : '';
-}
-
-async function copyText(text){
-  try{
-    await navigator.clipboard.writeText(text);
-    return true;
-  }catch(e){
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta);
-    ta.select();
-    try{ document.execCommand('copy'); }catch(e2){}
-    document.body.removeChild(ta);
-    return true;
-  }
-}
-
-document.getElementById('copyBtn').addEventListener('click', async function(){
-  const btn = document.getElementById('copyBtn');
-  const mainText = window.currentPromptText || '';
-  const negText = PROJECTS[currentProject].negativePrompt || '';
-  if(!mainText) return;
-  const fullText = negText ? (mainText + '\n\nتجنّب: ' + negText) : mainText;
-  await copyText(fullText);
-  btn.textContent = 'تم نسخ البرومبت الكامل ✓';
-  btn.classList.add('copied');
-  setTimeout(function(){ btn.textContent = 'نسخ البرومبت الكامل (الرئيسي + السلبي)'; btn.classList.remove('copied'); }, 1800);
-});
-
-document.getElementById('copyNegBtn').addEventListener('click', async function(){
-  const btn = this;
-  const text = document.getElementById('negativeOutput').textContent;
-  if(!text) return;
-  await copyText(text);
-  const orig = btn.textContent;
-  btn.textContent = 'تم ✓';
-  setTimeout(function(){ btn.textContent = orig; }, 1500);
-});
-
-const ADV_PROMPTS = {
-  pc1: { segments: [
-    {t:'text', v:'أنشئ ورقة مرجعية للشخصية التالية: '},
-    {t:'blank', id:'char_desc', label:'وصف الشخصية', ph:'العمر، الجنس، لون وقصة الشعر، لون العينين، ملامح مميزة، الملابس'},
-    {t:'text', v:'. أظهر ثلاث زوايا: أمامية، جانبية، وزاوية 3/4. حافظ على نفس ملامح الوجه والملابس في كل الزوايا. خلفية رمادية فاتحة محايدة، أسلوب رسم رقمي، ورقة استدارة شخصية، تفاصيل عالية الدقة.'}
-  ]},
-  pc2: { segments: [
-    {t:'text', v:'نفس الشخصية الموصوفة هنا بالضبط: '},
-    {t:'blank', id:'char_ref', label:'الصق وصف الشخصية', ph:'من الورقة المرجعية'},
-    {t:'text', v:'. أظهر هذي الشخصية الآن '},
-    {t:'blank', id:'scene', label:'الحدث أو الوضعية الجديدة', ph:'مثال: تمشي في الشارع، تبتسم، تجلس على مقهى'},
-    {t:'text', v:'. حافظ على نفس ملامح الوجه، تسريحة الشعر، لون العينين، وتفاصيل الملابس مطابقة للمرجع. '},
-    {t:'blank', id:'style', label:'النمط الفني', ph:'مثال: رسم رقمي واقعي، أنمي، ثلاثي الأبعاد'},
-    {t:'text', v:'.'}
-  ]},
-  pmk: { segments: [
-    {t:'text', v:'موك أب واقعي لمنتج، '},
-    {t:'blank', id:'design', label:'التصميم أو الشعار', ph:'وصف التصميم المرفوع'},
-    {t:'text', v:' مطبوع على '},
-    {t:'blank', id:'product', label:'نوع المنتج', ph:'تيشيرت أبيض، كوب سيراميك، حقيبة قماشية...'},
-    {t:'text', v:'. مصوّر في '},
-    {t:'blank', id:'setting', label:'بيئة التصوير', ph:'استوديو نظيف، بيئة طبيعية...'},
-    {t:'text', v:'، مع طيات قماش طبيعية وظلال واقعية ناعمة، تصوير منتج تجاري احترافي، دقة عالية.'}
-  ]}
-};
-const advState = {};
-
-function renderAdvPromptText(key){
-  const tpl = ADV_PROMPTS[key];
-  const state = advState[key] || {};
-  const el = document.getElementById(key);
-  el.innerHTML = tpl.segments.map(function(s){
-    if(s.t === 'text'){ return escapeHtml(s.v); }
-    const val = state[s.id];
-    return val ? '<span class="filled-blank">'+escapeHtml(val)+'</span>' : '<span class="empty-blank">['+escapeHtml(s.label)+']</span>';
-  }).join('');
-}
-
-function getAdvPromptText(key){
-  const tpl = ADV_PROMPTS[key];
-  const state = advState[key] || {};
-  return tpl.segments.map(function(s){
-    if(s.t === 'text'){ return s.v; }
-    const val = state[s.id];
-    return val ? val : ('['+s.label+']');
-  }).join('').trim();
-}
-
-function initAdvPrompt(key){
-  advState[key] = {};
-  const fieldsEl = document.getElementById(key+'-fields');
-  fieldsEl.innerHTML = ADV_PROMPTS[key].segments.filter(function(s){ return s.t==='blank'; }).map(function(b){
-    return '<div class="fill-field"><label>'+b.label+'</label><input type="text" data-key="'+key+'" data-blank="'+b.id+'" placeholder="'+b.ph+'"></div>';
-  }).join('');
-  fieldsEl.querySelectorAll('input').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      advState[key][inp.dataset.blank] = inp.value;
-      renderAdvPromptText(key);
-    });
-  });
-  renderAdvPromptText(key);
-}
-Object.keys(ADV_PROMPTS).forEach(initAdvPrompt);
-
-document.querySelectorAll('.mini-copy').forEach(function(btn){
-  btn.addEventListener('click', async function(){
-    const key = btn.dataset.target;
-    const text = ADV_PROMPTS[key] ? getAdvPromptText(key) : (document.getElementById(key)?document.getElementById(key).textContent.trim():'');
-    if(!text) return;
-    await copyText(text);
-    const orig = btn.textContent;
-    btn.textContent = 'تم ✓';
-    setTimeout(function(){ btn.textContent = orig; }, 1500);
-  });
-});
-
-document.querySelectorAll('.chip-ref').forEach(function(chip){
-  chip.addEventListener('click', async function(){
-    const txt = chip.textContent.trim();
-    await copyText(txt);
-    const orig = chip.textContent;
-    chip.textContent = '✓ تم النسخ';
-    setTimeout(function(){ chip.textContent = orig; }, 1400);
-  });
-});
-
-document.querySelectorAll('.tab-btn').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
-    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
-    btn.classList.add('active');
-    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
-  });
-});
-
-const revealEls = document.querySelectorAll('.reveal');
-if('IntersectionObserver' in window){
-  const io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); }
-    });
-  }, {threshold:.15});
-  revealEls.forEach(function(el){ io.observe(el); });
-} else {
-  revealEls.forEach(function(el){ el.classList.add('visible'); });
-}
-
-function animateCount(el){
-  const target = +el.dataset.count;
-  const suffix = el.dataset.suffix || '';
-  const dur = 1200;
-  const start = performance.now();
-  function step(now){
-    const p = Math.min(1,(now-start)/dur);
-    const eased = 1 - Math.pow(1-p, 3);
-    el.textContent = Math.round(target*eased) + suffix;
-    if(p < 1){ requestAnimationFrame(step); }
-  }
-  requestAnimationFrame(step);
-}
-const statEls = document.querySelectorAll('.stat-num');
-if('IntersectionObserver' in window){
-  const statIo = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){ animateCount(e.target); statIo.unobserve(e.target); }
-    });
-  }, {threshold:.5});
-  statEls.forEach(function(el){ statIo.observe(el); });
-} else {
-  statEls.forEach(function(el){ el.textContent = el.dataset.count + (el.dataset.suffix||''); });
-}
-
-initProjectGrid();
-resetSelections();
-renderFields();
-updateOutput();
-
-function openImageModal(imgUrl, title) {
-  const modal = document.getElementById('imageModal');
-  const modalImg = document.getElementById('imageModalImg');
-  const modalTitle = document.getElementById('imageModalTitle');
-  if (!modal || !modalImg) return;
-  modalImg.src = imgUrl;
-  if (modalTitle) modalTitle.textContent = title || 'معاينة النمط';
-  modal.classList.add('active');
-}
-
-function closeImageModal() {
-  const modal = document.getElementById('imageModal');
-  if (modal) modal.classList.remove('active');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  const closeBtn = document.getElementById('closeImageModalBtn');
-  const modal = document.getElementById('imageModal');
-  if (closeBtn) closeBtn.addEventListener('click', closeImageModal);
-  if (modal) {
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) closeImageModal();
-    });
-  }
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeImageModal();
-  });
-});
-
-
-// Dedicated Video Projects System
 const VIDEO_PROJECTS = {
   cinematic_video: {
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5 5-5 5v-10z"/><rect x="2" y="6" width="13" height="12" rx="2"/></svg>',
     name: 'سينمائي درامي (Cinematic)',
-    negativePrompt: 'تجنّب: تشوه الحركة، تجمّد الشاشة، لقطات غير متناسقة، بكسلة، حركات كاميرا مفاجئة ومشوهة، أخطاء الأيدي والوجه، تدرج لوني ضعيف، تقطيع باللقطات، نصوص غير واضحة',
+    negativePrompt: 'جودة رديئة، تشوه الحركة، تجمّد الشاشة، لقطات غير متناسقة، بكسلة، حركات كاميرا مفاجئة ومشوهة، أخطاء الأيدي والوجه، تدرج لوني ضعيف، تقطيع باللقطات، نصوص غير واضحة',
     fields: {
       subject: {
         label: 'الشخصية وحركة الفعل الرئيسي (Subject & Action)',
@@ -1656,7 +1260,7 @@ const VIDEO_PROJECTS = {
   commercial_video: {
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
     name: 'إعلانات ومنتجات (Commercial Video)',
-    negativePrompt:'تجنّb: منتج مشوه، إضاءة سيئة، خلفية مزدحمة، حركة اهتزازية غير مريحة، نصوص مشوهة، ألوان غير متناسقة، انعكاسات مزعجة',
+    negativePrompt:'منتج مشوه، إضاءة سيئة، خلفية مزدحمة، حركة اهتزازية غير مريحة، نصوص مشوهة، ألوان غير متناسقة، انعكاسات مزعجة',
     fields: {
       subject: {
         label: 'المنتج وحركة العرض (Product & Presentation)',
@@ -1687,7 +1291,7 @@ const VIDEO_PROJECTS = {
       camera_shot: {
         label: 'تأطير الكاميرا (Camera Framing)',
         options: [
-          {ar:'لقطة ماكرو مكبرة بدقة التفاصيل (Macro Macro Close-up)', en:'macro extreme close-up highlighting fine craftsmanship textures'},
+          {ar:'لقطة ماكرو مكبرة بدقة التفاصيل (Macro Close-up)', en:'macro extreme close-up highlighting fine craftsmanship textures'},
           {ar:'لقطة متوسطة متزنة للمنتج (Centered Medium Product Shot)', en:'perfectly centered medium product shot'},
           {ar:'لقطة دائرية ثلاثية الأبعاد (360 Product Spin Shot)', en:'360 degree revolving product view'}
         ]
@@ -1721,7 +1325,7 @@ const VIDEO_PROJECTS = {
   anime_action_video: {
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>',
     name: 'أنمي وحركة (Anime & Action)',
-    negativePrompt:'تجنّب: رسم مشوه، حركة غير متناسقة، هبوط معدل الإطارات، أخطاء وشم أو ملامح، خلفية ثابتة مملة، ألوان باهتة',
+    negativePrompt:'رسم مشوه، حركة غير متناسقة، هبوط معدل الإطارات، أخطاء وشم أو ملامح، خلفية ثابتة مملة، ألوان باهتة',
     fields: {
       subject: {
         label: 'الشخصية وحركة الأكشن (Anime Action)',
@@ -1781,7 +1385,7 @@ const VIDEO_PROJECTS = {
   documentary_video: {
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>',
     name: 'وثائقي وطبيعة (Nature Documentary)',
-    negativePrompt:'تجنّب: حركة غير واقعية للحيوانات، تشوه الأطراف، إضاءة اصطناعية زرقاء، بكسلة، اهتزاز مزعج، بيئة غير طبيعية',
+    negativePrompt:'حركة غير واقعية للحيوانات، تشوه الأطراف، إضاءة اصطناعية زرقاء، بكسلة، اهتزاز مزعج، بيئة غير طبيعية',
     fields: {
       subject: {
         label: 'الحيوان أو العنصر الوثائقي (Documentary Subject)',
@@ -1804,7 +1408,7 @@ const VIDEO_PROJECTS = {
         label: 'النمط الوثائقي (Docu-Style)',
         options: [
           {ar:'وثائقي طبيعي HD واقعي (BBC Earth Documentary Style)', en:'national geographic BBC earth documentary style, ultra realistic 8k'},
-          {ar:'وثائقي سينمائي سينمائي دافئ (Cinematic Wildlife Film)', en:'cinematic wildlife film aesthetic, natural color grading'}
+          {ar:'وثائقي سينمائي دافئ (Cinematic Wildlife Film)', en:'cinematic wildlife film aesthetic, natural color grading'}
         ]
       },
       camera_shot: {
@@ -1838,8 +1442,6 @@ const VIDEO_PROJECTS = {
     }
   }
 };
-
-let currentMode = 'image'; // 'image' or 'video'
 
 function getActiveProjects() {
   return currentMode === 'video' ? VIDEO_PROJECTS : PROJECTS;
@@ -1875,7 +1477,26 @@ function initModeToggle() {
   });
 }
 
-// Override initProjectGrid to support dynamic active mode
+function resetSelections(){
+  selections = {};
+  freeStates = {};
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  if(!proj) return;
+  
+  if (currentMode === 'video') {
+    Object.keys(proj.fields).forEach(function(fk){
+      selections[fk] = {idx:0, text:''};
+      freeStates[fk] = false;
+    });
+  } else {
+    fieldOrderUI.forEach(function(fk){
+      selections[fk] = {idx:0, text:''};
+      freeStates[fk] = false;
+    });
+  }
+}
+
 function initProjectGrid(){
   const grid = document.getElementById('projectGrid');
   const activeProjs = getActiveProjects();
@@ -1898,25 +1519,48 @@ function initProjectGrid(){
   });
 }
 
-// Override renderFields & getFieldValue & updateOutput to handle video dynamic keys
-function resetSelections(){
-  selections = {};
-  freeStates = {};
-  const activeProjs = getActiveProjects();
-  const proj = activeProjs[currentProject];
-  if(!proj) return;
-  
-  if (currentMode === 'video') {
-    Object.keys(proj.fields).forEach(function(fk){
-      selections[fk] = {idx:0, text:''};
-      freeStates[fk] = false;
-    });
-  } else {
-    fieldOrderUI.forEach(function(fk){
-      selections[fk] = {idx:0, text:''};
-      freeStates[fk] = false;
-    });
-  }
+function renderSelectField(fk, f){
+  const sel = selections[fk] || {idx:0, text:''};
+  const isFree = freeStates[fk] || false;
+  const isDynamic = (fk === 'dynamic');
+  const optsHtml = f.options.map(function(opt,i){
+    return '<option value="'+i+'"'+(sel.idx===i?' selected':'')+'>'+opt.ar+'</option>';
+  }).join('');
+  return '<div class="field-block glass'+(isDynamic?' dynamic-field':'')+(justSurprised?' just-surprised':'')+'">'
+    + '<div class="field-head">'
+    + '<span class="field-label"><span class="num">'+(fieldNumMap[fk] || '')+'</span>'+f.label+'</span>'
+    + '<span class="free-toggle'+(isFree?' active':'')+'" data-field="'+fk+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>اكتب بنفسك</span>'
+    + '</div>'
+    + '<select class="field-select'+(isFree?' field-hidden':'')+'" data-field="'+fk+'">'+optsHtml+'</select>'
+    + '<input type="text" class="free-input'+(isFree?' active':'')+'" data-field="'+fk+'" placeholder="اكتب وصفك الخاص هنا..." value="'+(sel.text||'').replace(/"/g,'&quot;')+'">'
+    + '</div>';
+}
+
+function renderStyleField(proj){
+  const fk = 'style';
+  const isFree = freeStates[fk] || false;
+  const sel = selections[fk] || {idx:0, text:''};
+  const ids = proj.styleIds;
+  const imgs = proj.styleImages || {};
+  const cardsHtml = ids.map(function(sid, i){
+    const st = STYLES[sid];
+    const isSel = (!isFree && sel.idx === i);
+    const swatchHtml = imgs[sid]
+      ? '<div class="style-swatch" style="background-image:url(&quot;'+imgs[sid]+'&quot;);background-size:cover;background-position:center;"></div>'
+      : '<div class="style-swatch swatch-'+(st ? st.swatch : 'default')+'"></div>';
+    return '<div class="style-card'+(isSel?' selected':'')+'" data-idx="'+i+'">'
+      + swatchHtml
+      + '<span class="style-name">'+(st ? st.ar : sid)+'</span>'
+      + '</div>';
+  }).join('');
+  return '<div class="field-block glass'+(justSurprised?' just-surprised':'')+'">'
+    + '<div class="field-head">'
+    + '<span class="field-label"><span class="num">'+fieldNumMap[fk]+'</span>'+styleFieldLabel+'</span>'
+    + '<span class="free-toggle'+(isFree?' active':'')+'" data-field="'+fk+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-inline-end:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>اكتب بنفسك</span>'
+    + '</div>'
+    + '<div class="style-scroll'+(isFree?' field-hidden':'')+'" id="styleScroll">'+cardsHtml+'</div>'
+    + '<input type="text" class="free-input'+(isFree?' active':'')+'" data-field="'+fk+'" placeholder="اكتب النمط الفني اللي تبيه..." value="'+(sel.text||'').replace(/"/g,'&quot;')+'">'
+    + '</div>';
 }
 
 function renderFields(){
@@ -1956,6 +1600,86 @@ function renderFields(){
   justSurprised = false;
 }
 
+function surpriseMe(){
+  const activeProjs = getActiveProjects();
+  const proj = activeProjs[currentProject];
+  if(!proj) return;
+
+  if (currentMode === 'video') {
+    Object.keys(proj.fields).forEach(function(fk){
+      freeStates[fk] = false;
+      const max = proj.fields[fk].options.length;
+      selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
+    });
+  } else {
+    fieldOrderUI.forEach(function(fk){
+      freeStates[fk] = false;
+      const max = (fk === 'style') ? proj.styleIds.length : proj.fields[fk].options.length;
+      selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
+    });
+  }
+  justSurprised = true;
+  renderFields();
+  updateOutput();
+}
+
+function attachFieldListeners(col){
+  col.querySelectorAll('.field-select').forEach(function(sel){
+    sel.addEventListener('change', function(){
+      const fk = sel.dataset.field;
+      selections[fk] = {idx:+sel.value, text:selections[fk] ? selections[fk].text : ''};
+      updateOutput();
+    });
+  });
+  col.querySelectorAll('.style-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      const idx = +card.dataset.idx;
+      const proj = PROJECTS[currentProject];
+      const isAlreadySelected = (!freeStates.style && selections.style && selections.style.idx === idx);
+      
+      if (isAlreadySelected) {
+        const sid = proj.styleIds[idx];
+        const imgUrl = (proj.styleImages && proj.styleImages[sid]);
+        const st = STYLES[sid];
+        if (imgUrl) {
+          const styleTitle = (st ? st.ar : 'النمط الفني') + ' - ' + proj.name;
+          openImageModal(imgUrl, styleTitle);
+          return;
+        }
+      }
+      
+      selections.style = {idx:idx, text:selections.style ? selections.style.text : ''};
+      freeStates.style = false;
+      renderFields();
+      updateOutput();
+    });
+  });
+  col.querySelectorAll('.free-toggle').forEach(function(tg){
+    tg.addEventListener('click', function(){
+      const fk = tg.dataset.field;
+      freeStates[fk] = !freeStates[fk];
+      renderFields();
+      updateOutput();
+      if(freeStates[fk]){
+        const inp = col.querySelector('.free-input[data-field="'+fk+'"]');
+        if(inp){ inp.focus(); }
+      }
+    });
+  });
+  col.querySelectorAll('.free-input').forEach(function(inp){
+    inp.addEventListener('input', function(){
+      const fk = inp.dataset.field;
+      if (!selections[fk]) selections[fk] = {idx:0, text:''};
+      selections[fk].text = inp.value;
+      updateOutput();
+    });
+  });
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function getFieldValue(fk){
   const activeProjs = getActiveProjects();
   const proj = activeProjs[currentProject];
@@ -1970,7 +1694,8 @@ function getFieldValue(fk){
   }
   if(!proj.fields[fk]) return '';
   const opt = proj.fields[fk].options[sel.idx];
-  return opt ? (opt.en || opt.ar) : '';
+  if (!opt) return '';
+  return currentMode === 'video' ? (opt.en || opt.ar) : opt.ar;
 }
 
 function updateOutput(){
@@ -1999,36 +1724,82 @@ function updateOutput(){
       return '<span class="out-chip" data-t="'+p.type+'">'+escapeHtml(p.val)+'</span>';
     }).join('');
   }
-  window.currentPromptText = parts.map(function(p){ return p.val; }).join(', ') + (parts.length ? '.' : '');
+  const separator = currentMode === 'video' ? ', ' : '، ';
+  window.currentPromptText = parts.map(function(p){ return p.val; }).join(separator) + (parts.length ? '.' : '');
   const negText = proj.negativePrompt || '';
-  document.getElementById('negativeOutput').textContent = negText ? (negText) : '';
+  document.getElementById('negativeOutput').textContent = negText ? ('تجنّب: ' + negText) : '';
 }
 
-function surpriseMe(){
-  const activeProjs = getActiveProjects();
-  const proj = activeProjs[currentProject];
-  if(!proj) return;
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(e2){}
+    document.body.removeChild(ta);
+    return true;
+  }
+}
 
-  if (currentMode === 'video') {
-    Object.keys(proj.fields).forEach(function(fk){
-      freeStates[fk] = false;
-      const max = proj.fields[fk].options.length;
-      selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
-    });
-  } else {
-    fieldOrderUI.forEach(function(fk){
-      freeStates[fk] = false;
-      const max = (fk === 'style') ? proj.styleIds.length : proj.fields[fk].options.length;
-      selections[fk] = {idx: Math.floor(Math.random()*max), text:''};
+function openImageModal(imgUrl, title) {
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('imageModalImg');
+  const modalTitle = document.getElementById('imageModalTitle');
+  if (!modal || !modalImg) return;
+  modalImg.src = imgUrl;
+  if (modalTitle) modalTitle.textContent = title || 'معاينة النمط';
+  modal.classList.add('active');
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('imageModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function startApp() {
+  const surpriseBtn = document.getElementById('surpriseBtn');
+  if (surpriseBtn) {
+    surpriseBtn.addEventListener('click', function(){
+      const btn = this;
+      btn.classList.add('spinning');
+      setTimeout(function(){ btn.classList.remove('spinning'); }, 500);
+      surpriseMe();
     });
   }
-  justSurprised = true;
-  renderFields();
-  updateOutput();
-}
 
-// Hook initModeToggle & initialize UI on load
-function startApp() {
+  const copyBtn = document.getElementById('copyBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async function(){
+      const activeProjs = getActiveProjects();
+      const proj = activeProjs[currentProject];
+      const mainText = window.currentPromptText || '';
+      const negText = proj ? (proj.negativePrompt || '') : '';
+      if(!mainText) return;
+      const fullText = negText ? (mainText + '\n\nتجنّب: ' + negText) : mainText;
+      await copyText(fullText);
+      copyBtn.textContent = 'تم نسخ البرومبت الكامل ✓';
+      copyBtn.classList.add('copied');
+      setTimeout(function(){ copyBtn.textContent = 'نسخ البرومبت الكامل (الرئيسي + السلبي)'; copyBtn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  const closeBtn = document.getElementById('closeImageModalBtn');
+  const modal = document.getElementById('imageModal');
+  if (closeBtn) closeBtn.addEventListener('click', closeImageModal);
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeImageModal();
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeImageModal();
+  });
+
   initModeToggle();
   resetSelections();
   initProjectGrid();
@@ -2041,7 +1812,6 @@ if (document.readyState === 'loading') {
 } else {
   startApp();
 }
-
 </script>
 
 <!-- Image Modal Popup -->
